@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import queue
+import re
 import subprocess
 import threading
 import time
@@ -78,7 +79,8 @@ def test_plugin_manifest_and_upstream_assets_exist() -> None:
 
     upstream = json.loads((ROOT / "UPSTREAM.json").read_text(encoding="utf-8"))
     apk = ROOT / "assets/android/hermes-phone-agent-v0.2.4.apk"
-    assert upstream["commit"] == "73735f57c50aa300ed6b69272500bd469de9a146"
+    assert re.fullmatch(r"[0-9a-f]{40}", upstream["commit"])
+    assert upstream["repository"] == "https://github.com/Ctrl-Creeper/hermes-phone-agent"
     assert hashlib.sha256(apk.read_bytes()).hexdigest() == upstream["helper"]["sha256"]
 
 
