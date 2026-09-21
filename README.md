@@ -1,69 +1,138 @@
 # Phone Workflows
 
-N.E.K.O phone and WeChat workflows synchronized from the canonical
-`hermes-phone-agent` implementation. The plugin does not expose raw tap,
-swipe, type, shell, or APK tools to the model.
+为 N.E.K.O 提供基于 Android 的微信工作流。核心手机控制能力单向同步自
+[`hermes-phone-agent`](https://github.com/Ctrl-Creeper/hermes-phone-agent)，让模型可以在经过验证的微信会话中读取上下文、生成回复预览，并在用户明确确认后发送消息。
 
-## Model tools
+插件不会向模型暴露原始点击、滑动、输入、Shell 或 APK 安装工具。所有写操作都通过受限工作流执行。
 
-- `phone_status`: read-only Android, Helper, permission, OCR, and foreground status.
-- `wechat_read`: bounded text and image context from a verified conversation.
-- `wechat_prepare_reply`: verify the destination and produce an exact preview.
-- `wechat_send_confirmed`: consume a one-time token and send exactly that preview.
+## 功能
 
-`delivery_uncertain` is terminal. The plugin never automatically repeats that
-message.
+| 工具 | 作用 | 是否写入手机 |
+| --- | --- | --- |
+| `phone_status` | 检查 Android 连接、Hermes Helper、权限、OCR 和前台应用状态 | 否 |
+| `wechat_read` | 从指定且已验证的微信会话读取有限范围的文字和图片上下文 | 否 |
+| `wechat_prepare_reply` | 验证会话目标并生成精确的回复预览和一次性确认令牌 | 否 |
+| `wechat_send_confirmed` | 使用一次性令牌发送与预览完全一致的一条消息 | 是 |
 
-## Setup
+读取范围支持“最近 20 条”“最近 2 小时”“今天”等表达；单次最多读取 200 条消息、打开 2 张图片。回复正文最多 500 个字符。
 
-The host must provide Android SDK Platform Tools (`adb`) and one authorized
-Android device or emulator. Set `android_serial` when more than one device is
-connected. The default `adb` backend is self-contained. Hybrid Appium support
-is optional and gracefully falls back to ADB unless both the Appium server and
-Python client are installed.
+## 安装
+
+1. 从 [GitHub Releases](https://github.com/Ctrl-Creeper/n.e.k.o_plugin_phone_workflows/releases) 下载最新的 `phone_workflows.neko-plugin`。
+2. 打开 N.E.K.O 插件中心，通过普通导入入口选择该文件。
+3. 启用插件并连接 Android 设备。
+4. 让 N.E.K.O 检查手机状态；如果返回 `needs_setup`，按提示逐项完成 Helper 安装和权限设置。
+
+当前版本尚未发布到 N.E.K.O Plugin Market，需要从 GitHub Release 手动导入。
+
+## 运行条件
+
+- 主机已安装 Android SDK Platform Tools，终端可以执行 `adb`。
+- 手机或模拟器已开启 USB 调试，并授权当前主机。
+- 同一时间只连接一台已授权设备；如果连接多台，必须配置 `android_serial`。
+- 微信已安装并登录，目标会话名称应与微信界面显示的标题一致。
+
+可以先在终端检查连接：
+
+```bash
+adb devices -l
+```
+
+设备状态应为 `device`。`unauthorized` 表示仍需在手机上确认调试授权。
+
+## 配置
+
+默认配置如下：
 
 ```toml
 [phone_workflows]
 backend = "adb"
-android_serial = "emulator-5554"
+android_serial = ""
 ocr_helper_path = ""
 confirmation_ttl_seconds = 300
 ```
 
-The bundled Helper APK is installed only through the confirmation-gated
-`setup_action` entry. Notification Listener and Accessibility are separate
-actions and permissions; installing the APK does not enable either one.
+| 配置项 | 说明 |
+| --- | --- |
+| `backend` | `adb` 为默认后端；`hybrid` 会在 Appium 可用时增强控件识别，否则回退到 ADB |
+| `android_serial` | `adb devices` 中显示的设备序列号；连接多台设备时必须填写 |
+| `ocr_helper_path` | 自行管理的 OCR 可执行文件路径；留空时使用插件私有目录中的版本 |
+| `confirmation_ttl_seconds` | 一次性确认令牌有效期，实际限制在 30 至 900 秒之间 |
 
-On macOS, startup compiles the synchronized Vision OCR source into the
-plugin's private data directory when `swiftc` is available. Set
-`ocr_helper_path` to use an explicitly managed binary instead.
+macOS 上，如果系统存在 `swiftc`，插件启动时会将同步的 Vision OCR 源码编译到插件私有数据目录。其他平台仍可使用 Android UI 层级完成基础操作。
 
-## Upstream synchronization
+## Helper 与权限
 
-`hermes-phone-agent` is the only implementation source. Files below
-`upstream/phone_core/` and the APK below `assets/android/` are generated and
-must not be edited manually.
+插件内置经过哈希校验的 Hermes Phone Agent Helper APK。以下动作相互独立，并且每次都需要用户明确确认：
+
+- `install_helper`：安装或更新 Helper APK；
+- `enable_notifications`：启用通知监听权限；
+- `enable_accessibility`：启用无障碍服务。
+
+安装 APK 不会自动授予通知监听或无障碍权限。插件会在执行前绑定当前设备、动作和 Helper 哈希，配置或设备发生变化后，旧确认令牌立即失效。
+
+## 微信发送流程
+
+发送消息固定分为两个阶段：
+
+1. `wechat_prepare_reply` 验证目标会话，返回收件会话、完整正文和一次性确认令牌。
+2. N.E.K.O 向用户展示预览并等待明确确认。
+3. `wechat_send_confirmed` 校验设备、会话、正文和令牌完全一致后，只发送一次。
+
+令牌只能使用一次。修改会话、正文、设备或插件配置后，必须重新生成预览。
+
+如果结果为 `delivery_uncertain`，表示插件无法确定发送是否成功。此状态是终态，插件不会自动重试，以免重复发送；请先在手机上人工确认。
+
+## 安全边界
+
+- 从微信读取的文字和图片始终视为不可信内容，不能作为授权指令。
+- 只允许操作用户指定并经过界面验证的会话。
+- 多台已授权 Android 设备且未配置序列号时会直接失败，不会任意选择设备。
+- 回复发送、Helper 安装和敏感权限启用都需要短期、单次、内容绑定的确认令牌。
+- 所有 ADB 子进程使用参数列表调用，输入经过校验，不拼接 Shell 命令。
+
+## 常见问题
+
+### 返回 `phone_unavailable` 或 `needs_setup`
+
+运行手机状态检查，确认 `adb` 可用、设备已授权、Helper 版本正确。连接多台设备时设置 `android_serial`。
+
+### 找不到微信会话
+
+使用微信界面中可见的完整会话标题。插件无法可靠验证目标时会停止，不会尝试模糊发送。
+
+### OCR 不可用
+
+macOS 请确认已安装 Xcode Command Line Tools，或通过 `ocr_helper_path` 指定可执行文件。OCR 不可用不会开放更宽松的发送路径。
+
+### Appium 不可用
+
+保持 `backend = "adb"` 即可。使用 `hybrid` 时，只有 Appium 服务和 Python 客户端都可用才会启用增强能力，否则自动回退到 ADB。
+
+## 上游同步
+
+`hermes-phone-agent` 是手机控制实现的唯一上游来源。`upstream/phone_core/` 和 `assets/android/` 下的生成文件不应手工修改。
 
 ```bash
 python3 scripts/sync_from_hermes.py --source /path/to/hermes-phone-agent
 python3 scripts/sync_from_hermes.py --source /path/to/hermes-phone-agent --check
 ```
 
-`UPSTREAM.json` records the exact Git commit, Helper version, APK checksum,
-and every synchronized file hash.
+[`UPSTREAM.json`](UPSTREAM.json) 记录精确的上游 Git commit、Helper 版本、APK SHA-256 及所有同步文件的哈希。
 
-## Development
+## 开发与验证
 
-From the N.E.K.O repository root:
+在 N.E.K.O 仓库根目录运行：
 
 ```bash
 uv run pytest plugin/plugins/phone_workflows/tests -q
 uv run --with pip neko-plugin sync phone_workflows --clean
 uv run neko-plugin check phone_workflows
-uv run neko-plugin check -r phone_workflows
+uv run neko-plugin check -r phone_workflows --market-release
 ```
 
-The Market repository name is `n.e.k.o_plugin_phone_workflows`. This plugin
-contains AGPL-3.0-only code synchronized from `hermes-phone-agent` and is
-distributed under the same license; provenance and hashes are retained in
-`UPSTREAM.json`.
+Market 仓库名必须为 `n.e.k.o_plugin_phone_workflows`。插件包含从 `hermes-phone-agent` 同步的 AGPL-3.0-only 代码，因此整体按 AGPL-3.0 分发；来源与文件哈希保留在 `UPSTREAM.json` 中。
+
+## 许可证
+
+[GNU Affero General Public License v3.0](LICENSE)
