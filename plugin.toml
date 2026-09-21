@@ -1,10 +1,29 @@
 [plugin]
 id = "phone_workflows"
 name = "Phone Workflows"
+description = "Hermes-backed Android and WeChat workflows with explicit confirmation and staged Helper permissions."
+short_description = "Control WeChat through a verified Android workflow without exposing raw phone tools."
+keywords = ["android", "phone", "wechat", "微信", "adb", "hermes"]
 version = "0.1.0"
 type = "plugin"
 entry = "plugin.plugins.phone_workflows:PhoneWorkflowsPlugin"
 
+[plugin.author]
+name = "N.E.K.O Team"
+
 [plugin.sdk]
 recommended = ">=0.1.0,<0.2.0"
 supported = ">=0.1.0,<0.3.0"
+
+[plugin.store]
+enabled = true
+
+[plugin_runtime]
+enabled = true
+auto_start = false
+
+[phone_workflows]
+backend = "adb"
+android_serial = ""
+ocr_helper_path = ""
+confirmation_ttl_seconds = 300

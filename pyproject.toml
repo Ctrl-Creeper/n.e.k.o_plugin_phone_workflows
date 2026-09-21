@@ -1,4 +1,12 @@
 [project]
 name = "phone_workflows"
 version = "0.1.0"
-dependencies = []
+requires-python = ">=3.10"
+dependencies = [
+    "defusedxml>=0.7,<1",
+    "PyYAML>=6,<7",
+]
+
+[tool.neko.build]
+exclude_dirs = ["docs", "scripts", "tests"]
+exclude_files = ["ruff.toml"]

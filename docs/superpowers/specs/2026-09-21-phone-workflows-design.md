@@ -1,5 +1,8 @@
 # Phone Workflows Plugin Design
 
+> Superseded by `2026-09-21-phone-workflows-hermes-downstream-design.md`.
+> The MCP-first boundary below is retained only as decision history.
+
 ## Summary
 
 Build `phone_workflows` as a standalone N.E.K.O plugin repository that turns
@@ -366,4 +369,3 @@ Real-device tests never send without a human-confirmed test message and target.
 - A generic workflow-definition DSL.
 - Automatic installation of Android platform tools or Appium.
 - Remote phone backends.
-

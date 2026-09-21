@@ -1,3 +1,9 @@
 [plugin_runtime]
 enabled = true
 auto_start = false
+
+[phone_workflows]
+backend = "adb"
+android_serial = ""
+ocr_helper_path = ""
+confirmation_ttl_seconds = 300
