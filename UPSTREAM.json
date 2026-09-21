@@ -1,19 +1,19 @@
 {
-  "commit": "de88506123bc182f467666fd675b515cf9d40878",
+  "commit": "d39fa49484d449b0cf6c4c88a579439051bf6c55",
   "files": {
     "LICENSE": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
     "THIRD_PARTY_LICENSES/hermes-phone-agent-AGPL-3.0.txt": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
     "assets/android/hermes-phone-agent-v0.2.4.apk": "6223522d3e060784ae57184cc2ef6eead4c452cad3b32f251390f177bdbca68f",
-    "upstream/phone_core/adb_backend.py": "79bbbb488fce51bf390a0d87c11901f4b4290a46d6087f932bc40ceb02868126",
+    "upstream/phone_core/adb_backend.py": "bc136ae80f2a946ec4c180f9ed2f6bcff432a7983937568eb75721a431463b6c",
     "upstream/phone_core/appium_backend.py": "1ab6fb9060b1983b94de717673aea97dfd8db7c3acfe9582fc630a3b0a95d646",
-    "upstream/phone_core/appium_manager.py": "4d8b57c3deef45b363413d4780c18e167429eb12c99dcd2b9b4fb475846069f5",
+    "upstream/phone_core/appium_manager.py": "d8dbd5dc5e37f93773299c646191fe907101a2a507d3912dd93b85a73446d9ad",
     "upstream/phone_core/backend.py": "07ca901b2921efe85da3ec6aeb633d95a4f60c53c5a77267d51eaf9a8a25bf73",
     "upstream/phone_core/host_ocr.py": "c05385ecb7b38d762a96cba3fb1fb0947625acfa4e2baf5302a947ad1589e7a5",
     "upstream/phone_core/native/phone_ocr.swift": "cab72b7d9d2d4258e1b8d35e9a30248c60b5ef867b4b658980982ed0bd44e802",
-    "upstream/phone_core/policy.py": "1e86d0f6a40fad9116c18ba58c6bdb36f5d99b53d3cabaa786ad58374ecd45d7",
-    "upstream/phone_core/sanitize.py": "c91cd099028ebaeb2b9896b0c6641837968aa76727ebd7e7fd42b2eb7a2cb75a",
+    "upstream/phone_core/policy.py": "bef7db8742f3aa9eb5461dd9a1b08d83d9c00032f8633e389203e5eb0b55ea64",
+    "upstream/phone_core/sanitize.py": "35edbfcd31c6e215bc9331c483eed6463c3b2cffb88efacdaecc8364df07d436",
     "upstream/phone_core/wechat.py": "08347cd8e99e8b94ab3056a2c612c2b0c78e8b970fb2f51c04997e77ef7c9bd0",
-    "upstream/phone_core/wechat_context.py": "a59bf49a33855b94af33f376825f60013ac37b37e228680880c2583406c2b001"
+    "upstream/phone_core/wechat_context.py": "c1e4522b4752d2ed68cc44e5c187b4d50316cacec654db1636663a9a5fccec6c"
   },
   "helper": {
     "package": "com.hermes.phoneagent",
