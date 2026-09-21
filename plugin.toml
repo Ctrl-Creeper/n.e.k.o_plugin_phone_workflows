@@ -1,10 +1,10 @@
 [plugin]
 id = "phone_workflows"
 name = "Phone Workflows"
-description = "Hermes-backed Android and WeChat workflows with explicit confirmation and staged Helper permissions."
-short_description = "Control WeChat through a verified Android workflow without exposing raw phone tools."
-keywords = ["android", "phone", "wechat", "微信", "adb", "hermes"]
-version = "0.1.0"
+description = "Android phone workflow foundation backed by Hermes, currently shipping a verified WeChat adapter with explicit confirmation."
+short_description = "Reusable Android workflow infrastructure with WeChat as its first supported app adapter."
+keywords = ["android", "phone", "workflow", "adapter", "wechat", "微信", "adb", "hermes"]
+version = "0.1.1"
 type = "plugin"
 entry = "plugin.plugins.phone_workflows:PhoneWorkflowsPlugin"
 
