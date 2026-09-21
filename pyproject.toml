@@ -1,0 +1,4 @@
+[project]
+name = "phone_workflows"
+version = "0.1.0"
+dependencies = []

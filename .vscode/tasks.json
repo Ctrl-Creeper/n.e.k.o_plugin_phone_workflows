@@ -1,0 +1,41 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "N.E.K.O: check phone_workflows",
+      "type": "shell",
+      "command": "uv run neko-plugin check phone_workflows",
+      "options": {
+        "cwd": "${config:nekoPlugin.repoRoot}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "N.E.K.O: sync phone_workflows",
+      "type": "shell",
+      "command": "uv run --with pip neko-plugin sync phone_workflows --clean",
+      "options": {
+        "cwd": "${config:nekoPlugin.repoRoot}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "N.E.K.O: check -r phone_workflows",
+      "type": "shell",
+      "command": "uv run neko-plugin check -r phone_workflows",
+      "options": {
+        "cwd": "${config:nekoPlugin.repoRoot}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "N.E.K.O: build phone_workflows",
+      "type": "shell",
+      "command": "uv run neko-plugin build phone_workflows",
+      "options": {
+        "cwd": "${config:nekoPlugin.repoRoot}"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

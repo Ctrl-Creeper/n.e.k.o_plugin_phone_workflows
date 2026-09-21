@@ -1,0 +1,10 @@
+[plugin]
+id = "phone_workflows"
+name = "Phone Workflows"
+version = "0.1.0"
+type = "plugin"
+entry = "plugin.plugins.phone_workflows:PhoneWorkflowsPlugin"
+
+[plugin.sdk]
+recommended = ">=0.1.0,<0.2.0"
+supported = ">=0.1.0,<0.3.0"
