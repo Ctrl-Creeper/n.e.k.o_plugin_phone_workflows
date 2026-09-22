@@ -50,12 +50,12 @@ Phone Workflows 插件
 
 ## 安装
 
+当前插件已上传到[Plugin Marktet](https://market.project-neko.cn/#/plugin/74)
+
 1. 从 [GitHub Releases](https://github.com/Ctrl-Creeper/n.e.k.o_plugin_phone_workflows/releases) 下载最新的 `phone_workflows.neko-plugin`。
 2. 打开 N.E.K.O 插件中心，通过普通导入入口选择该文件。
 3. 启用插件并连接 Android 设备。
 4. 让 N.E.K.O 检查手机状态；如果返回 `needs_setup`，按提示逐项完成 Helper 安装和权限设置。
-
-当前版本尚未发布到 N.E.K.O Plugin Market，需要从 GitHub Release 手动导入。
 
 ## 运行条件
 
