@@ -33,7 +33,7 @@ Phone Workflows 插件
 | --- | --- | --- |
 | 设备与后端 | 发现并唯一选择 Android 设备，管理 ADB/Appium 后端 | 仅通过状态和应用工作流使用 |
 | OCR 与 UI 识别 | 读取 Android UI 层级，并在支持的平台使用主机 OCR | 仅通过应用工作流使用 |
-| Hermes Helper | 提供剪贴板输入、通知与无障碍能力 | 仅通过受确认的设置动作管理 |
+| Helper | 提供剪贴板输入、通知与无障碍能力 | 仅通过受确认的设置动作管理 |
 | 确认与串行化 | 绑定设备、目标和操作内容，避免并发冲突及重复执行 | 由所有写工作流复用 |
 | `phone_status` | 检查 Android 连接、Helper、权限、OCR 和前台应用状态 | 只读模型工具 |
 | `setup_action` | 安装 Helper，或启用通知监听、无障碍能力 | 需要明确确认的宿主入口 |
@@ -95,7 +95,7 @@ macOS 上，如果系统存在 `swiftc`，插件启动时会将同步的 Vision 
 
 ## Helper 与权限
 
-插件内置经过哈希校验的 Hermes Phone Agent Helper APK。以下动作相互独立，并且每次都需要用户明确确认：
+插件内置经过哈希校验的 Phone Agent Helper APK。以下动作相互独立，并且每次都需要用户明确确认：
 
 - `install_helper`：安装或更新 Helper APK；
 - `enable_notifications`：启用通知监听权限；
