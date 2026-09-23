@@ -72,6 +72,31 @@ def _plugin(result: ActionResult) -> PhoneWorkflowsPlugin:
     return plugin
 
 
+@pytest.mark.asyncio
+async def test_wechat_read_defaults_to_current_text_page_and_preserves_explicit_search() -> None:
+    plugin = _plugin(ActionResult(ok=True, action="wechat_collect_context"))
+    observed = []
+
+    async def collect(**kwargs):
+        observed.append(kwargs)
+        return ActionResult(ok=True, action="wechat_collect_context", meta={"screenshots": []})
+
+    plugin._runtime.collect_wechat_context = collect
+    assert (await plugin.wechat_read(chat="Example"))["status"] == "complete"
+    assert observed[-1]["max_pages"] == 1
+    assert observed[-1]["include_images"] is False
+    assert observed[-1]["open_images"] is False
+
+    await plugin.wechat_read(chat="Example", scope="最近20条")
+    assert observed[-1]["max_pages"] == 8
+    assert observed[-1]["open_images"] is False
+
+    await plugin.wechat_read(chat="Example", include_images=True, open_images=True)
+    assert observed[-1]["max_pages"] == 8
+    assert observed[-1]["include_images"] is True
+    assert observed[-1]["open_images"] is True
+
+
 def test_plugin_manifest_and_upstream_assets_exist() -> None:
     manifest = (ROOT / "plugin.toml").read_text(encoding="utf-8")
     assert 'id = "phone_workflows"' in manifest
