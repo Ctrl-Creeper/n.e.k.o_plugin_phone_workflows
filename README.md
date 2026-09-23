@@ -47,6 +47,9 @@ Phone Workflows 插件
 | `wechat_send_confirmed` | 使用一次性令牌发送与预览完全一致的一条消息 | 是 |
 
 微信适配负责把通用手机能力组合成可验证的会话读取和发送流程。读取范围支持“最近 20 条”“最近 2 小时”“今天”等表达；单次最多读取 200 条消息、打开 2 张图片。回复正文最多 500 个字符。
+`wechat_read` 默认只读当前一页文字。需要更早消息时传入 `scope` 或
+`max_pages`；需要打开图片预览时同时设置 `include_images=true` 与
+`open_images=true`。
 
 ## 安装
 
