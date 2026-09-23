@@ -1,10 +1,10 @@
 {
-  "commit": "23b235ec505aa90f387187e4a38831ed26cd00aa",
+  "commit": "5424f1d85421adbe6a390cf6484f2bac9705bede",
   "files": {
     "LICENSE": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
     "THIRD_PARTY_LICENSES/hermes-phone-agent-AGPL-3.0.txt": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
     "assets/android/hermes-phone-agent-v0.2.4.apk": "6223522d3e060784ae57184cc2ef6eead4c452cad3b32f251390f177bdbca68f",
-    "upstream/phone_core/adb_backend.py": "2e217a10cbf5b7af0654456a859a1b85a1a137e8c3a5c396be306a27bbb7fcbe",
+    "upstream/phone_core/adb_backend.py": "63d0a58d1f0581e62e996633c9921afce3ec9ef7bf309dd0a9e6aae4698bc2ef",
     "upstream/phone_core/appium_backend.py": "ad6fb6ce652d208bb8695f37e3eff5ad82e40e2eb9df468c018effc3648fae1e",
     "upstream/phone_core/appium_manager.py": "d8dbd5dc5e37f93773299c646191fe907101a2a507d3912dd93b85a73446d9ad",
     "upstream/phone_core/backend.py": "07ca901b2921efe85da3ec6aeb633d95a4f60c53c5a77267d51eaf9a8a25bf73",
@@ -13,7 +13,7 @@
     "upstream/phone_core/policy.py": "7c5f6ca96488f227b0834a3ea32d88f0b6b4fa3030a9a576645387b113dcf318",
     "upstream/phone_core/sanitize.py": "35edbfcd31c6e215bc9331c483eed6463c3b2cffb88efacdaecc8364df07d436",
     "upstream/phone_core/wechat.py": "9b239ca1f6c132d6a62aeade75afa53f112bde2bf672afde4a41c7b36f98e215",
-    "upstream/phone_core/wechat_context.py": "03c48bcccdb9c97475181ad26659da44113b91b6a2f8770a8640a8d07f0e68ae"
+    "upstream/phone_core/wechat_context.py": "3f20d129a35f3b2b77fc6444613f3a47fa4376fb8d395752075616c47b5c45dc"
   },
   "helper": {
     "package": "com.hermes.phoneagent",
