@@ -1,10 +1,10 @@
 {
-  "commit": "62e71055e27a8fb4ada9a6b388bb75f2d6344489",
+  "commit": "6a7d7cf59131a14f47258716553e78478e27bb09",
   "files": {
     "LICENSE": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
     "THIRD_PARTY_LICENSES/hermes-phone-agent-AGPL-3.0.txt": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
     "assets/android/hermes-phone-agent-v0.2.4.apk": "6223522d3e060784ae57184cc2ef6eead4c452cad3b32f251390f177bdbca68f",
-    "upstream/phone_core/adb_backend.py": "cab43099fff216b82a8b2eab367166fa922bce2e51607faa4ea36c0ce45c2f73",
+    "upstream/phone_core/adb_backend.py": "4b373f885b95f906ae34d227778ecd6c92d4de530e389dfdd382a68e109789a4",
     "upstream/phone_core/appium_backend.py": "ad6fb6ce652d208bb8695f37e3eff5ad82e40e2eb9df468c018effc3648fae1e",
     "upstream/phone_core/appium_manager.py": "d8dbd5dc5e37f93773299c646191fe907101a2a507d3912dd93b85a73446d9ad",
     "upstream/phone_core/backend.py": "07ca901b2921efe85da3ec6aeb633d95a4f60c53c5a77267d51eaf9a8a25bf73",
