@@ -1,5 +1,5 @@
 {
-  "commit": "5e19a8a9aa827d61ebefbceadf427a6fb1424289",
+  "commit": "e2f16ef664d011839e61ccd3c40c7259071e4743",
   "files": {
     "LICENSE": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
     "THIRD_PARTY_LICENSES/hermes-phone-agent-AGPL-3.0.txt": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
@@ -12,7 +12,7 @@
     "upstream/phone_core/native/phone_ocr.swift": "e2bb1c609007aaa1b7674602319e648e8d3e6ee36ee5a5b665efa5cd0bf80f7b",
     "upstream/phone_core/policy.py": "7c5f6ca96488f227b0834a3ea32d88f0b6b4fa3030a9a576645387b113dcf318",
     "upstream/phone_core/sanitize.py": "35edbfcd31c6e215bc9331c483eed6463c3b2cffb88efacdaecc8364df07d436",
-    "upstream/phone_core/wechat.py": "da68872b8a91f54485e88e8d92c714ffe6f20feec21daf314da74527bbce4704",
+    "upstream/phone_core/wechat.py": "5f3a8fc3e11ec976a58765f0a96ccd3532f610c9449b2f1aac11fd90ae36471a",
     "upstream/phone_core/wechat_context.py": "3f20d129a35f3b2b77fc6444613f3a47fa4376fb8d395752075616c47b5c45dc"
   },
   "helper": {
