@@ -85,6 +85,8 @@ backend = "adb"
 android_serial = ""
 ocr_helper_path = ""
 confirmation_ttl_seconds = 300
+enable_write_actions = false
+attachment_dir = ""
 ```
 
 | 配置项 | 说明 |
@@ -93,6 +95,8 @@ confirmation_ttl_seconds = 300
 | `android_serial` | `adb devices` 中显示的设备序列号；连接多台设备时必须填写 |
 | `ocr_helper_path` | 自行管理的 OCR 可执行文件路径；留空时使用插件私有目录中的版本 |
 | `confirmation_ttl_seconds` | 一次性确认令牌有效期，实际限制在 30 至 900 秒之间 |
+| `enable_write_actions` | 默认 `false`。设为 `true` 才会启用收藏消息、发送文件、接受好友请求这三类写操作 |
+| `attachment_dir` | 允许发送文件的唯一目录；留空则禁用文件发送。文件解析符号链接后必须位于该目录内 |
 
 macOS 上，如果系统存在 `swiftc`，插件启动时会将同步的 Vision OCR 源码编译到插件私有数据目录。其他平台仍可使用 Android UI 层级完成基础操作。
 
@@ -115,6 +119,20 @@ macOS 上，如果系统存在 `swiftc`，插件启动时会将同步的 Vision 
 3. `wechat_send_confirmed` 校验设备、会话、正文和令牌完全一致后，只发送一次。
 
 令牌只能使用一次。修改会话、正文、设备或插件配置后，必须重新生成预览。
+
+`wechat_prepare_reply` 与 `wechat_send_confirmed` 可选传入 `quote_text`、`quote_sender`、`quote_context`、`quote_max_pages` 发送引用回复；引用内容与正文一同绑定到令牌，找不到唯一原文时不会退化为普通回复。
+
+`wechat_search_history` 在已验证的会话内按关键词搜索聊天记录（只读，不需要确认）。
+
+### 需要显式开启的写操作
+
+以下两个工具沿用同样的“预览 + 一次性令牌”流程，并且只有在 `enable_write_actions = true` 时才可用。先调用 `wechat_prepare_write`，用户确认后再调用 `wechat_confirm_write`，由 `action` 选择操作：
+
+| `action` | 参数 | 说明 |
+| --- | --- | --- |
+| `wechat_favorite` | `chat`、`message_text` | 收藏会话中一条完全匹配的可见文字消息 |
+| `wechat_send_attachment` | `chat`、`file_path` | 发送 `attachment_dir` 内的一个文件（≤ 20 MiB）；预览显示路径、大小和 SHA-256，执行前重新校验，文件变化则令牌失效；结果始终为 `delivery_uncertain`，不会重试 |
+| `wechat_accept_friend` | `requester` | 接受指定名称的好友请求 |
 
 如果结果为 `delivery_uncertain`，表示插件无法确定发送是否成功。此状态是终态，插件不会自动重试，以免重复发送；请先在手机上人工确认。
 
