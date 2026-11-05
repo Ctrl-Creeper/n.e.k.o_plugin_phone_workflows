@@ -186,7 +186,7 @@ def _read_attachment_in(path: object, allowed_dir: str) -> dict[str, Any]:
             raise ValueError("outside attachment_dir")
         meta, _ = read_attachment(str(target))
     except (OSError, ValueError) as exc:
-        logging.getLogger(__name__).warning("attachment rejected: %s", exc)
+        logging.getLogger(__name__).warning("attachment rejected: %r", exc)
         raise ValueError(denied) from None
     return {"path": meta["path"], "size": meta["size"], "sha256": meta["sha256"]}
 
