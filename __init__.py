@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import unicodedata
 from pathlib import Path
 from typing import Any
@@ -175,14 +176,18 @@ def _read_attachment_in(path: object, allowed_dir: str) -> dict[str, Any]:
         raise ValueError("attachment sending is disabled: set attachment_dir in [phone_workflows]")
     if not isinstance(path, str) or not path.strip():
         raise ValueError("file_path must be a non-empty string")
+    # Check the directory first and fail with one generic message, so the file is
+    # never opened outside attachment_dir and a caller cannot probe which paths exist.
+    denied = "file is not available for sending"
     try:
-        meta, _ = read_attachment(path)
         root = Path(allowed_dir).expanduser().resolve(strict=True)
-    except OSError as exc:
-        raise ValueError("attachment file or attachment_dir is not readable") from exc
-    # read_attachment resolves symlinks, so a link pointing out of the directory fails here.
-    if not Path(meta["path"]).is_relative_to(root):
-        raise ValueError("file is outside the configured attachment_dir")
+        target = Path(path).expanduser().resolve()  # follows symlinks
+        if not target.is_relative_to(root):
+            raise ValueError("outside attachment_dir")
+        meta, _ = read_attachment(str(target))
+    except (OSError, ValueError) as exc:
+        logging.getLogger(__name__).warning("attachment rejected: %s", exc)
+        raise ValueError(denied) from None
     return {"path": meta["path"], "size": meta["size"], "sha256": meta["sha256"]}
 
 

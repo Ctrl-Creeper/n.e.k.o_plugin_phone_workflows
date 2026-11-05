@@ -627,9 +627,12 @@ async def test_attachment_is_confined_to_attachment_dir_and_rechecked_at_confirm
     assert no_dir["error_code"] == "invalid_input" and "attachment_dir" in no_dir["summary"]
 
     plugin._settings["attachment_dir"] = str(inbox)
+    summaries = set()
     for path in (secret, inbox / "link.txt", inbox / "missing.txt", inbox):
         refused = await plugin.wechat_prepare_write(action="wechat_send_attachment", chat="Alice", file_path=str(path))
         assert refused["error_code"] == "invalid_input", path
+        summaries.add(refused["summary"])
+    assert len(summaries) == 1  # missing vs. outside-but-existing is indistinguishable
     assert plugin._runtime.verified == []
 
     prepared = await plugin.wechat_prepare_write(action="wechat_send_attachment", chat="Alice", file_path=str(report))
