@@ -27,3 +27,5 @@ backend = "adb"
 android_serial = ""
 ocr_helper_path = ""
 confirmation_ttl_seconds = 300
+enable_write_actions = false
+attachment_dir = ""

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import contextlib
 import hashlib
 import os
 import platform
@@ -17,6 +18,9 @@ from typing import Any
 HELPER_PACKAGE = "com.hermes.phoneagent"
 NOTIFICATION_COMPONENT = f"{HELPER_PACKAGE}/{HELPER_PACKAGE}.PhoneNotificationListener"
 ACCESSIBILITY_COMPONENT = f"{HELPER_PACKAGE}/{HELPER_PACKAGE}.PhoneAccessibilityService"
+_WECHAT_WORKFLOWS = frozenset({
+    "search_history", "favorite_message", "send_attachment", "accept_friend_request",
+})
 
 
 def _clean_serial(value: object) -> str:
@@ -133,10 +137,26 @@ class PhoneRuntime:
 
         return await self._exclusive(operation)
 
-    async def send_wechat_reply(self, chat: str, text: str) -> Any:
+    async def send_wechat_reply(self, chat: str, text: str, **quote: Any) -> Any:
         from .upstream.phone_core.wechat import reply
 
-        return await self._exclusive(reply, chat, text)
+        return await self._exclusive(reply, chat, text, **quote)
+
+    async def run_wechat(self, name: str, *args: Any, **kwargs: Any) -> Any:
+        """Run one allowlisted shared WeChat workflow, then return Home (best effort)."""
+        if name not in _WECHAT_WORKFLOWS:
+            raise ValueError("unsupported WeChat workflow")
+        from .upstream.phone_core import wechat
+
+        def operation(backend: Any) -> Any:
+            try:
+                return getattr(wechat, name)(backend, *args, **kwargs)
+            finally:
+                # Never let cleanup mask a result: a send may already have happened.
+                with contextlib.suppress(Exception):
+                    backend.keyevent("HOME")
+
+        return await self._exclusive(operation)
 
     async def selected_serial(self) -> str:
         def operation(backend: Any) -> str:

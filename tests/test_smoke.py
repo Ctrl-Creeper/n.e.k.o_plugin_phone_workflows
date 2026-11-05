@@ -42,13 +42,18 @@ class _Runtime:
         self.config = RuntimeConfig(android_serial="emulator-5554")
         self.sent = []
         self.verified = []
+        self.calls = []
 
     async def verify_wechat_chat(self, chat: str):
         self.verified.append(chat)
         return ActionResult(ok=True, action="wechat_open_chat")
 
-    async def send_wechat_reply(self, chat: str, text: str):
-        self.sent.append((chat, text))
+    async def send_wechat_reply(self, chat: str, text: str, **quote):
+        self.sent.append((chat, text, quote) if quote else (chat, text))
+        return self.result
+
+    async def run_wechat(self, name: str, *args, **kwargs):
+        self.calls.append((name, args, kwargs))
         return self.result
 
     async def selected_serial(self):
@@ -69,6 +74,7 @@ def _plugin(result: ActionResult) -> PhoneWorkflowsPlugin:
     plugin._runtime = _Runtime(result)
     plugin._confirmations = ConfirmationGate()
     plugin._upstream = {"commit": "abc123"}
+    plugin._settings = {}
     return plugin
 
 
@@ -305,6 +311,9 @@ def test_only_high_level_llm_tools_are_declared() -> None:
         "wechat_read",
         "wechat_prepare_reply",
         "wechat_send_confirmed",
+        "wechat_search_history",
+        "wechat_prepare_write",
+        "wechat_confirm_write",
     }
     assert READ_SCHEMA["properties"]["max_images"]["maximum"] == 2
 
@@ -326,6 +335,9 @@ def test_plugin_registers_exact_high_level_tools_with_sdk_context() -> None:
         "wechat_read",
         "wechat_prepare_reply",
         "wechat_send_confirmed",
+        "wechat_search_history",
+        "wechat_prepare_write",
+        "wechat_confirm_write",
     }
     registered = []
     while not context.message_queue.empty():
@@ -337,6 +349,9 @@ def test_plugin_registers_exact_high_level_tools_with_sdk_context() -> None:
         "wechat_read",
         "wechat_prepare_reply",
         "wechat_send_confirmed",
+        "wechat_search_history",
+        "wechat_prepare_write",
+        "wechat_confirm_write",
     }
 
 
@@ -490,3 +505,149 @@ async def test_context_collection_returns_home_after_failure(
     with pytest.raises(RuntimeError, match="capture failed"):
         await runtime.collect_wechat_context(chat="Alice")
     assert backend.keys == ["HOME"]
+
+
+def _ok(**meta) -> ActionResult:
+    return ActionResult(ok=True, action="wechat_reply", meta={"delivery_status": "confirmed", **meta})
+
+
+@pytest.mark.asyncio
+async def test_plain_reply_is_unchanged_and_quote_identity_is_bound_to_the_token() -> None:
+    plugin = _plugin(_ok())
+    prepared = await plugin.wechat_prepare_reply(chat="Alice", text="ok")
+    assert "quote_text" not in prepared
+    # A plain-reply token cannot be upgraded into a quoted send.
+    quoted = await plugin.wechat_send_confirmed(
+        chat="Alice", text="ok", confirmation_token=prepared["confirmation_token"],
+        confirmed=True, quote_text="meet at 3",
+    )
+    assert quoted["error_code"] == "confirmation_required"
+    prepared = await plugin.wechat_prepare_reply(chat="Alice", text="ok")
+    sent = await plugin.wechat_send_confirmed(
+        chat="Alice", text="ok", confirmation_token=prepared["confirmation_token"], confirmed=True,
+    )
+    assert sent["status"] == "confirmed"
+    assert plugin._runtime.sent == [("Alice", "ok")]
+
+    prepared = await plugin.wechat_prepare_reply(chat="Alice", text="ok", quote_text="meet at 3")
+    assert prepared["quote_text"] == "meet at 3"
+    other = await plugin.wechat_send_confirmed(
+        chat="Alice", text="ok", confirmation_token=prepared["confirmation_token"],
+        confirmed=True, quote_text="meet at 4",
+    )
+    assert other["error_code"] == "confirmation_required"
+    prepared = await plugin.wechat_prepare_reply(chat="Alice", text="ok", quote_text="meet at 3")
+    sent = await plugin.wechat_send_confirmed(
+        chat="Alice", text="ok", confirmation_token=prepared["confirmation_token"],
+        confirmed=True, quote_text="meet at 3",
+    )
+    assert sent["status"] == "confirmed"
+    assert plugin._runtime.sent[-1] == (
+        "Alice", "ok",
+        {"quote_text": "meet at 3", "quote_sender": "", "quote_context": "", "quote_max_pages": 3},
+    )
+    hints_only = await plugin.wechat_prepare_reply(chat="Alice", text="ok", quote_sender="Bob")
+    assert hints_only["error_code"] == "invalid_input"
+
+
+@pytest.mark.asyncio
+async def test_search_history_bounds_and_forwarding() -> None:
+    plugin = _plugin(ActionResult(ok=True, action="wechat_search_history"))
+    for bad in ("", "   ", "x" * 101, 5):
+        assert (await plugin.wechat_search_history(chat="Alice", query=bad))["error_code"] == "invalid_input"
+    assert (await plugin.wechat_search_history(chat="Alice", query="invoice", max_pages=99))["status"] == "complete"
+    await plugin.wechat_search_history(chat="Alice", query="invoice", max_pages=0)
+    assert [call[2]["max_pages"] for call in plugin._runtime.calls] == [8, 1]
+    assert plugin._runtime.calls[0][:2] == ("search_history", ("Alice", "invoice"))
+
+
+@pytest.mark.asyncio
+async def test_write_actions_are_disabled_by_default() -> None:
+    plugin = _plugin(_ok())
+    calls = [
+        plugin.wechat_prepare_write(action="wechat_favorite", chat="Alice", message_text="hi"),
+        plugin.wechat_prepare_write(action="wechat_send_attachment", chat="Alice", file_path="/etc/hosts"),
+        plugin.wechat_prepare_write(action="wechat_accept_friend", requester="Bob"),
+        plugin.wechat_confirm_write(action="wechat_favorite", chat="Alice", message_text="hi", confirmation_token="t", confirmed=True),
+        plugin.wechat_confirm_write(
+            action="wechat_send_attachment", chat="Alice", file_path="/etc/hosts", confirmation_token="t", confirmed=True),
+        plugin.wechat_confirm_write(action="wechat_accept_friend", requester="Bob", confirmation_token="t", confirmed=True),
+    ]
+    for call in calls:
+        assert (await call)["error_code"] == "write_actions_disabled"
+    assert plugin._runtime.verified == [] and plugin._runtime.calls == []
+
+
+@pytest.mark.asyncio
+async def test_favorite_and_friend_accept_bind_the_exact_payload() -> None:
+    plugin = _plugin(ActionResult(ok=True, action="wechat_favorite", meta={"favorite_status": "confirmed"}))
+    plugin._settings = {"enable_write_actions": True}
+    token = (await plugin.wechat_prepare_write(action="wechat_favorite", chat="Alice", message_text="hi"))["confirmation_token"]
+    wrong = await plugin.wechat_confirm_write(
+        action="wechat_favorite", chat="Alice", message_text="other", confirmation_token=token, confirmed=True)
+    assert wrong["error_code"] == "confirmation_required" and plugin._runtime.calls == []
+    token = (await plugin.wechat_prepare_write(action="wechat_favorite", chat="Alice", message_text="hi"))["confirmation_token"]
+    assert (await plugin.wechat_confirm_write(
+        action="wechat_favorite", chat="Alice", message_text="hi", confirmation_token=token, confirmed=False))["error_code"] == (
+        "confirmation_required")
+    token = (await plugin.wechat_prepare_write(action="wechat_favorite", chat="Alice", message_text="hi"))["confirmation_token"]
+    done = await plugin.wechat_confirm_write(
+        action="wechat_favorite", chat="Alice", message_text="hi", confirmation_token=token, confirmed=True)
+    assert done["status"] == "confirmed"
+    assert plugin._runtime.calls == [("favorite_message", ("Alice", "hi"), {})]
+
+    token = (await plugin.wechat_prepare_write(action="wechat_accept_friend", requester="Bob"))["confirmation_token"]
+    assert plugin._runtime.verified == ["Alice", "Alice", "Alice"]  # friend accept verifies no chat
+    stale = await plugin.wechat_confirm_write(
+        action="wechat_accept_friend", requester="Carol", confirmation_token=token, confirmed=True)
+    assert stale["error_code"] == "confirmation_required"
+    token = (await plugin.wechat_prepare_write(action="wechat_accept_friend", requester="Bob"))["confirmation_token"]
+    await plugin.wechat_confirm_write(action="wechat_accept_friend", requester="Bob", confirmation_token=token, confirmed=True)
+    assert plugin._runtime.calls[-1] == ("accept_friend_request", ("Bob",), {})
+
+
+@pytest.mark.asyncio
+async def test_attachment_is_confined_to_attachment_dir_and_rechecked_at_confirm(tmp_path: Path) -> None:
+    inbox, outside = tmp_path / "inbox", tmp_path / "outside"
+    inbox.mkdir()
+    outside.mkdir()
+    report, secret = inbox / "report.txt", outside / "secret.txt"
+    report.write_text("v1")
+    secret.write_text("secret")
+    (inbox / "link.txt").symlink_to(secret)
+    uncertain = ActionResult(
+        ok=False, action="wechat_send_attachment",
+        meta={"delivery_attempted": True, "delivery_status": "uncertain"},
+    )
+    plugin = _plugin(uncertain)
+    plugin._settings = {"enable_write_actions": True}
+
+    # enabled writes alone are not enough: an attachment_dir is also required
+    no_dir = await plugin.wechat_prepare_write(action="wechat_send_attachment", chat="Alice", file_path=str(report))
+    assert no_dir["error_code"] == "invalid_input" and "attachment_dir" in no_dir["summary"]
+
+    plugin._settings["attachment_dir"] = str(inbox)
+    for path in (secret, inbox / "link.txt", inbox / "missing.txt", inbox):
+        refused = await plugin.wechat_prepare_write(action="wechat_send_attachment", chat="Alice", file_path=str(path))
+        assert refused["error_code"] == "invalid_input", path
+    assert plugin._runtime.verified == []
+
+    prepared = await plugin.wechat_prepare_write(action="wechat_send_attachment", chat="Alice", file_path=str(report))
+    sha = hashlib.sha256(b"v1").hexdigest()
+    assert (prepared["sha256"], prepared["size"], prepared["path"]) == (sha, 2, str(report.resolve()))
+
+    report.write_text("v2")  # changed after preview
+    changed = await plugin.wechat_confirm_write(
+        action="wechat_send_attachment", chat="Alice", file_path=str(report), confirmation_token=prepared["confirmation_token"], confirmed=True)
+    assert changed["error_code"] == "confirmation_required" and plugin._runtime.calls == []
+
+    report.write_text("v1")
+    prepared = await plugin.wechat_prepare_write(action="wechat_send_attachment", chat="Alice", file_path=str(report))
+    sent = await plugin.wechat_confirm_write(
+        action="wechat_send_attachment", chat="Alice", file_path=str(report), confirmation_token=prepared["confirmation_token"], confirmed=True)
+    assert sent["status"] == "delivery_uncertain" and sent["error_code"] == "delivery_uncertain"
+    assert plugin._runtime.calls == [("send_attachment", ("Alice", str(report.resolve()), sha), {})]
+    # single use: replaying the token must not send again
+    replay = await plugin.wechat_confirm_write(
+        action="wechat_send_attachment", chat="Alice", file_path=str(report), confirmation_token=prepared["confirmation_token"], confirmed=True)
+    assert replay["error_code"] == "confirmation_required" and len(plugin._runtime.calls) == 1
