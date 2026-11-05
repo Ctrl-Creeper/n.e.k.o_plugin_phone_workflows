@@ -481,6 +481,36 @@ async def test_ocr_compile_failure_is_a_degraded_startup_state(
 
 
 @pytest.mark.asyncio
+async def test_ocr_helper_is_compiled_optimized(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "phone_ocr.swift"
+    source.write_text("// stand-in source", encoding="utf-8")
+    destination = tmp_path / "phone-ocr"
+    runtime = PhoneRuntime(
+        RuntimeConfig(ocr_helper_path=str(destination)),
+        plugin_dir=ROOT,
+        logger=_Logger(),
+    )
+    commands: list[list[str]] = []
+
+    def fake_swiftc(command, **_kwargs):
+        commands.append(command)
+        Path(command[command.index("-o") + 1]).write_text("binary", encoding="utf-8")
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    monkeypatch.setattr("platform.system", lambda: "Darwin")
+    monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/swiftc" if name == "swiftc" else None)
+    monkeypatch.setattr("subprocess.run", fake_swiftc)
+
+    result = await runtime.ensure_ocr_helper(source)
+
+    assert result["status"] == "built"
+    assert "-O" in commands[0]
+
+
+@pytest.mark.asyncio
 async def test_context_collection_returns_home_after_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
