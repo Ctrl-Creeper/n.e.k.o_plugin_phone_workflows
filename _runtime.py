@@ -336,6 +336,8 @@ class PhoneRuntime:
                 result = subprocess.run(
                     [
                         swiftc,
+                        # Unoptimized, the helper's per-pixel region pass dominates OCR time.
+                        "-O",
                         str(source),
                         "-o",
                         str(temporary),
