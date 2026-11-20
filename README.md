@@ -1,5 +1,7 @@
 # Phone Workflows
 
+> **上游：** [hermes-phone-agent](https://github.com/Ctrl-Creeper/hermes-phone-agent)。核心手机控制能力（`upstream/phone_core/`）从上游单向同步，请勿手工修改；N.E.K.O 工作流、插件与确认机制在本仓库维护。
+
 为 N.E.K.O 提供安全、可复用的 Android 手机工作流基础。核心手机控制能力单向同步自
 [`hermes-phone-agent`](https://github.com/Ctrl-Creeper/hermes-phone-agent)。
 
